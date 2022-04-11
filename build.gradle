@@ -1,0 +1,106 @@
+plugins {
+	id 'org.springframework.boot' version '2.6.2'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'java'
+	id 'jacoco'
+	id "org.sonarqube" version "3.2.0"
+}
+
+group = 'com.cygnet'
+version = '0.0.1-SNAPSHOT'
+sourceCompatibility = '11'
+
+subprojects {
+	apply plugin: 'org.sonarqube'
+
+	sonarqube {
+		properties {
+			property 'sonar.core.codeCoveragePlugin', 'jacoco'
+			property 'sonar.coverage.jacoco.xmlReportPaths', "${project.buildDir}/reports/jacoco.xml"
+		}
+	}
+
+}
+
+apply from: "$project.rootDir/sonar.gradle"
+
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+ext {
+	set('springCloudVersion', "2021.0.0")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.liquibase:liquibase-core'
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.projectlombok:lombok:1.18.20'
+	implementation 'org.projectlombok:lombok:1.18.20'
+	compileOnly 'org.projectlombok:lombok'
+	runtimeOnly 'org.postgresql:postgresql'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation 'org.springframework.security:spring-security-test'
+
+	// https://mvnrepository.com/artifact/io.jsonwebtoken/jjwt
+	implementation group: 'io.jsonwebtoken', name: 'jjwt', version: '0.9.1'
+   // https://mvnrepository.com/artifact/javax.xml.bind/jaxb-api
+	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.3.1'
+
+	// https://mvnrepository.com/artifact/com.icegreen/greenmail
+	testImplementation group: 'com.icegreen', name: 'greenmail', version: '1.6.1'
+
+
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
+
+	implementation 'org.mapstruct:mapstruct:1.4.2.Final'
+
+	annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
+
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+
+}
+
+
+
+jacoco {
+	toolVersion = "0.8.7"
+}
+
+jacocoTestReport {
+	reports {
+		xml.enabled true
+		xml.destination file("${buildDir}/reports/jacoco.xml")
+		csv.enabled false
+		html.destination file("${buildDir}/jacocoHtml")
+	}
+}
+
+test {
+	finalizedBy jacocoTestReport // report is always generated after tests run
+}
+
+jacocoTestReport {
+	dependsOn test // tests are required to run before generating the report
+}
